@@ -3,7 +3,7 @@ const Book = require("../models/books.model")
 const Genre = require("../models/genres.model")
 
 
-const getAllBooks = async (req, res) => {
+const allBooks = async (req, res) => {
   try {
     const books = await Book.find();
     res.status(200).send(books);
@@ -225,7 +225,7 @@ const getBooksByAuthor = async (req, res) => {
 };
 
 module.exports =
-  {getAllBooks,
+  {allBooks,
   createBook,
   updateBook,
   deleteBook,
