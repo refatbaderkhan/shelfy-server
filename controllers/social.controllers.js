@@ -1,6 +1,49 @@
 const User = require("../models/users.model")
 const Book = require("../models/books.model")
 
+const getFollowedUsers = async (req, res) => {
+  const userId = req.user._id; // Current user's ID
+  try {
+    const currentUser = await User.findById(userId).populate('follows.following_id');
+    if (!currentUser) {
+      return res.status(404).send({ message: "User not found." });
+    }
+
+    const followedUsers = currentUser.follows.map(follow => follow.following_id);
+
+    if (followedUsers.length === 0) {
+      res.status(200).send({ message: "You are not following any users." });
+    } else {
+      res.status(200).send(followedUsers);
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("An error occurred while fetching followed users.");
+  }
+};
+
+const getNotFollowedUsers = async (req, res) => {
+  const userId = req.user._id; // Current user's ID
+  try {
+    const currentUser = await User.findById(userId).populate('follows.following_id');
+    if (!currentUser) {
+      return res.status(404).send({ message: "User not found." });
+    }
+
+    const followedUserIds = currentUser.follows.map(follow => follow.following_id._id);
+    const notFollowedUsers = await User.find(
+      { _id: { $nin: [userId, ...followedUserIds] } },
+      // Select the desired fields
+      'books first_name last_name profile_picture username _id'
+    );
+
+    res.status(200).send(notFollowedUsers);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("An error occurred while fetching users.");
+  }
+};  
+
 
 const followUser = async (req, res) => {
   const followerId = req.user._id; // Current user's ID
@@ -63,7 +106,9 @@ const booksFeed = async (req, res) => {
     }
 
     const followedUserIds = user.follows.map(follow => follow.following_id._id);
-    const suggestions = await Book.find({ user_id: { $in: followedUserIds } });
+    
+    const suggestions = await Book.find({ user_id: { $in: followedUserIds } })
+      .populate('user_id', 'username'); // Populate the user_id field with username
 
     if (suggestions.length === 0) {
       res.status(200).send({ message: "Start following users to see their books." });
@@ -79,6 +124,8 @@ const booksFeed = async (req, res) => {
 
 module.exports =
   {booksFeed,
+  getFollowedUsers,
+  getNotFollowedUsers,
   followUser,
   unfollowUser
   }

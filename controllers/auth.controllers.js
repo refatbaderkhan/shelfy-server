@@ -39,7 +39,7 @@ const register = async (req, res) => {
       });
 
       await user.save();
-      res.status(201).send(user);
+      res.status(201).send({user, message:"Account created successfully."});
   } catch (error) {
       res.status(500).send("An error occurred while registering the user.");
   }

@@ -13,6 +13,28 @@ const allBooks = async (req, res) => {
   }
 };
 
+const getUserBooks = async (req, res) => {
+  const userId = req.user._id; // Assuming the user ID is available from authentication
+
+  try {
+    const user = await User.findById(userId).populate('books');
+    if (!user) {
+      return res.status(404).send({ message: "User not found." });
+    }
+
+    const userBooks = user.books;
+
+    if (userBooks.length === 0) {
+      res.status(200).send({ message: "You don't have any books yet." });
+    } else {
+      res.status(200).send(userBooks);
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("An error occurred while fetching user's books.");
+  }
+};
+
 const createBook = async (req, res) => {
   const { title, author, picture_url, review, genres} = req.body;
   const user_id = req.user._id;
@@ -193,6 +215,9 @@ const getBooksByTitle = async (req, res) => {
 
   try {
     const books = await Book.find({ title: { $regex: title, $options: "i" } });
+    if (books.length === 0) {
+      return res.status(200).send({ message: "No matches." });
+    }
     res.status(200).send(books);
   } catch (error) {
     console.error(error);
@@ -205,6 +230,9 @@ const getBooksByGenre = async (req, res) => {
 
   try {
     const books = await Book.find({ "genres.genre_name": { $regex: genre, $options: "i" } });
+    if (books.length === 0) {
+      return res.status(200).send({ message: "No matches." });
+    }
     res.status(200).send(books);
   } catch (error) {
     console.error(error);
@@ -217,6 +245,9 @@ const getBooksByAuthor = async (req, res) => {
 
   try {
     const books = await Book.find({ author: { $regex: author, $options: "i" } });
+    if (books.length === 0) {
+      return res.status(200).send({ message: "No matches." });
+    }
     res.status(200).send(books);
   } catch (error) {
     console.error(error);
@@ -224,8 +255,10 @@ const getBooksByAuthor = async (req, res) => {
   }
 };
 
+
 module.exports =
   {allBooks,
+  getUserBooks,
   createBook,
   updateBook,
   deleteBook,
