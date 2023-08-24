@@ -11,9 +11,5 @@ const getProfile = async (req, res)=>{
     res.send(user)
 }
 
-const Test = async (req, res)=>{
-  console.log('akal')
-  res.send('akal')
-}
 
-module.exports = {getAllUsers, getProfile, Test}
+module.exports = {getAllUsers, getProfile}

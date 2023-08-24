@@ -1,6 +1,6 @@
 const User = require("../models/users.model")
 const Book = require("../models/books.model")
-const Genre = require("../models/genres.model")
+
 
 
 const allBooks = async (req, res) => {
@@ -13,14 +13,13 @@ const allBooks = async (req, res) => {
   }
 };
 
+
+
 const getUserBooks = async (req, res) => {
-  const userId = req.user._id; // Assuming the user ID is available from authentication
+  const userId = req.user._id;
 
   try {
     const user = await User.findById(userId).populate('books');
-    if (!user) {
-      return res.status(404).send({ message: "User not found." });
-    }
 
     const userBooks = user.books;
 
@@ -31,19 +30,50 @@ const getUserBooks = async (req, res) => {
     }
   } catch (error) {
     console.error(error);
-    res.status(500).send("An error occurred while fetching user's books.");
+    res.status(500);
   }
 };
+
+
+
+const getBookById = async (req, res) => {
+  const bookId = req.params.id;
+  const userId = req.user._id;
+
+  try {
+    const book = await Book.findById(bookId).populate('genres');
+
+    const user = await User.findById(userId);
+
+    const isLikedByUser = user.liked_books.includes(bookId);
+
+    const bookWithLikeInfo = {
+      _id: book._id,
+      title: book.title,
+      author: book.author,
+      picture_url: book.picture_url,
+      review: book.review,
+      user_id: book.user_id,
+      genres: book.genres,
+      isLikedByUser: isLikedByUser
+    };
+
+    res.status(200).send(bookWithLikeInfo);
+
+  } catch (error) {
+    console.error(error);
+    res.status(500);
+  }
+};
+
+
 
 const createBook = async (req, res) => {
   const { title, author, picture_url, review, genres} = req.body;
   const user_id = req.user._id;
 
   try {
-    const user = await User.findById(user_id); // Retrieve the user using their ID
-    if (!user) {
-      return res.status(404).send({ message: "User not found." });
-    }
+    const user = await User.findById(user_id);
 
     const bookGenres = [];
     for (const genreName of genres) {
@@ -75,14 +105,16 @@ const createBook = async (req, res) => {
     res.status(201).send(newBook);
   } catch (error) {
     console.error(error);
-    res.status(500).send("An error occurred while creating the book.");
+    res.status(500);
   }
 };
 
+
+
 const updateBook = async (req, res) => {
-  const bookId = req.params.id; // Assuming the book ID is provided in the URL parameter
+  const bookId = req.params.id;
   const { title, author, picture_url, review, genres } = req.body;
-  const userId = req.user._id; // Assuming the user ID is available from authentication
+  const userId = req.user._id;
 
   try {
     const book = await Book.findById(bookId);
@@ -90,18 +122,11 @@ const updateBook = async (req, res) => {
       return res.status(404).send({ message: "Book not found." });
     }
 
-    // Check if the user is the creator of the book
-    if (book.user_id.toString() !== userId) {
-      return res.status(403).send({ message: "You are not authorized to modify this book." });
-    }
-
-    // Update book fields
     if (title) book.title = title;
     if (author) book.author = author;
     if (picture_url) book.picture_url = picture_url;
     if (review) book.review = review;
 
-    // Update genres
     const bookGenres = [];
     for (const genreName of genres) {
       const existingGenre = await Genre.findOne({ genre_name: genreName });
@@ -124,67 +149,62 @@ const updateBook = async (req, res) => {
   }
 };
 
+
+
 const deleteBook = async (req, res) => {
-  const bookId = req.params.id; // Assuming the book ID is provided in the URL parameter
-  const userId = req.user._id; // Assuming the user ID is available from authentication
+  const bookId = req.params.id;
+  const userId = req.user._id;
 
   try {
     const book = await Book.findById(bookId);
-    if (!book) {
-      return res.status(404).send({ message: "Book not found." });
-    }
 
-    // Check if the user is the creator of the book
     if (book.user_id.toString() !== userId) {
       return res.status(403).send({ message: "You are not authorized to delete this book." });
     }
 
-    // Remove the book reference from the user's books array
     const user = await User.findById(userId);
     user.books.pull(bookId);
     await user.save();
 
-    // Delete the book
     await Book.findByIdAndRemove(bookId);
 
     res.status(200).send({ message: "Book deleted successfully." });
   } catch (error) {
     console.error(error);
-    res.status(500).send("An error occurred while deleting the book.");
+    res.status(500);
   }
 };
 
+
+
 const likeBook = async (req, res) => {
-  const bookId = req.params.id; // Assuming the book ID is provided in the URL parameter
-  const userId = req.user._id; // Assuming the user ID is available from authentication
+  const bookId = req.params.id;
+  const userId = req.user._id;
 
   try {
     const book = await Book.findById(bookId);
-    if (!book) {
-      return res.status(404).send({ message: "Book not found." });
-    }
 
     const user = await User.findById(userId);
 
-    // Check if the user has already liked the book
     if (user.liked_books.includes(bookId)) {
       return res.status(400).send({ message: "You have already liked this book." });
     }
 
-    // Add the book to the user's liked_books array
     user.liked_books.push(bookId);
     await user.save();
 
     res.status(200).send({ message: "Book liked successfully." });
   } catch (error) {
     console.error(error);
-    res.status(500).send("An error occurred while liking the book.");
+    res.status(500);
   }
 };
 
+
+
 const unlikeBook = async (req, res) => {
-  const bookId = req.params.id; // Assuming the book ID is provided in the URL parameter
-  const userId = req.user._id; // Assuming the user ID is available from authentication
+  const bookId = req.params.id;
+  const userId = req.user._id;
 
   try {
     const book = await Book.findById(bookId);
@@ -194,24 +214,24 @@ const unlikeBook = async (req, res) => {
 
     const user = await User.findById(userId);
 
-    // Check if the user has liked the book
     if (!user.liked_books.includes(bookId)) {
       return res.status(400).send({ message: "You have not liked this book." });
     }
 
-    // Remove the book from the user's liked_books array
     user.liked_books.pull(bookId);
     await user.save();
 
     res.status(200).send({ message: "Book unliked successfully." });
   } catch (error) {
     console.error(error);
-    res.status(500).send("An error occurred while unliking the book.");
+    res.status(500);
   }
 };
 
+
+
 const getBooksByTitle = async (req, res) => {
-  const title = req.params.title; // Assuming the title is provided in the URL parameter
+  const title = req.params.title;
 
   try {
     const books = await Book.find({ title: { $regex: title, $options: "i" } });
@@ -221,27 +241,32 @@ const getBooksByTitle = async (req, res) => {
     res.status(200).send(books);
   } catch (error) {
     console.error(error);
-    res.status(500).send("An error occurred while fetching books by title.");
+    res.status(500);
   }
 };
 
+
+
 const getBooksByGenre = async (req, res) => {
-  const genre = req.params.genre; // Assuming the genre is provided in the URL parameter
+  const genre = req.params.genre;
 
   try {
-    const books = await Book.find({ "genres.genre_name": { $regex: genre, $options: "i" } });
+    const books = await Book.find({ "genres.genre_name": { $regex: genre, $options: "i" } })
+
     if (books.length === 0) {
       return res.status(200).send({ message: "No matches." });
     }
     res.status(200).send(books);
   } catch (error) {
     console.error(error);
-    res.status(500).send("An error occurred while fetching books by genre.");
+    res.status(500);
   }
 };
 
+
+
 const getBooksByAuthor = async (req, res) => {
-  const author = req.params.author; // Assuming the author is provided in the URL parameter
+  const author = req.params.author;
 
   try {
     const books = await Book.find({ author: { $regex: author, $options: "i" } });
@@ -251,14 +276,16 @@ const getBooksByAuthor = async (req, res) => {
     res.status(200).send(books);
   } catch (error) {
     console.error(error);
-    res.status(500).send("An error occurred while fetching books by author.");
+    res.status(500);
   }
 };
+
 
 
 module.exports =
   {allBooks,
   getUserBooks,
+  getBookById,
   createBook,
   updateBook,
   deleteBook,

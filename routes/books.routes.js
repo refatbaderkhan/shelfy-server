@@ -1,10 +1,10 @@
 const express = require("express");
 const router = express.Router();
 const booksController = require("../controllers/books.controllers");
-const authMiddleware = require("../middlewares/auth.middleware");
 
 router.get("/", booksController.allBooks)
 router.get("/my", booksController.getUserBooks)
+router.get("/:id", booksController.getBookById)
 router.post("/create", booksController.createBook)
 router.post("/update/:id", booksController.updateBook)
 router.delete("/:id", booksController.deleteBook)

@@ -1,13 +1,12 @@
 const User = require("../models/users.model")
 const Book = require("../models/books.model")
 
+
+
 const getFollowedUsers = async (req, res) => {
-  const userId = req.user._id; // Current user's ID
+  const userId = req.user._id;
   try {
     const currentUser = await User.findById(userId).populate('follows.following_id');
-    if (!currentUser) {
-      return res.status(404).send({ message: "User not found." });
-    }
 
     const followedUsers = currentUser.follows.map(follow => follow.following_id);
 
@@ -18,46 +17,39 @@ const getFollowedUsers = async (req, res) => {
     }
   } catch (error) {
     console.error(error);
-    res.status(500).send("An error occurred while fetching followed users.");
+    res.status(500);
   }
 };
 
+
+
 const getNotFollowedUsers = async (req, res) => {
-  const userId = req.user._id; // Current user's ID
+  const userId = req.user._id;
   try {
     const currentUser = await User.findById(userId).populate('follows.following_id');
-    if (!currentUser) {
-      return res.status(404).send({ message: "User not found." });
-    }
 
     const followedUserIds = currentUser.follows.map(follow => follow.following_id._id);
     const notFollowedUsers = await User.find(
       { _id: { $nin: [userId, ...followedUserIds] } },
-      // Select the desired fields
       'books first_name last_name profile_picture username _id'
     );
 
     res.status(200).send(notFollowedUsers);
   } catch (error) {
     console.error(error);
-    res.status(500).send("An error occurred while fetching users.");
+    res.status(500);
   }
-};  
+};
+
 
 
 const followUser = async (req, res) => {
-  const followerId = req.user._id; // Current user's ID
-  const followingId = req.params.id; // User ID to follow
-  console.log(followingId)
+  const followerId = req.user._id;
+  const followingId = req.params.id;
 
   try {
     const follower = await User.findById(followerId);
     const following = await User.findById(followingId);
-    console.log(following)
-
-    if (!follower || !following) {
-      return res.status(404).send({ message: "User not found." });
-    }
 
     follower.follows.push({ follower_id: followerId, following_id: followingId });
     following.follows.push({ follower_id: followerId, following_id: followingId });
@@ -68,21 +60,17 @@ const followUser = async (req, res) => {
     res.status(200).send({ message: "User followed successfully." });
   } catch (error) {
     console.error(error);
-    res.status(500).send("An error occurred while following the user.");
+    res.status(500);
   }
 };
 
 const unfollowUser = async (req, res) => {
-  const followerId = req.user._id; // Current user's ID
-  const followingId = req.params.id; // User ID to unfollow
+  const followerId = req.user._id;
+  const followingId = req.params.id;
 
   try {
     const follower = await User.findById(followerId);
     const following = await User.findById(followingId);
-
-    if (!follower || !following) {
-      return res.status(404).send({ message: "User not found." });
-    }
 
     follower.follows = follower.follows.filter(follow => follow.following_id.toString() !== followingId);
     following.follows = following.follows.filter(follow => follow.follower_id.toString() !== followerId);
@@ -93,22 +81,21 @@ const unfollowUser = async (req, res) => {
     res.status(200).send({ message: "User unfollowed successfully." });
   } catch (error) {
     console.error(error);
-    res.status(500).send("An error occurred while unfollowing the user.");
+    res.status(500);
   }
 };
 
+
+
 const booksFeed = async (req, res) => {
-  const userId = req.user._id; // Current user's ID
+  const userId = req.user._id;
   try {
     const user = await User.findById(userId).populate('follows.following_id');
-    if (!user) {
-      return res.status(404).send({ message: "User not found." });
-    }
 
     const followedUserIds = user.follows.map(follow => follow.following_id._id);
     
     const suggestions = await Book.find({ user_id: { $in: followedUserIds } })
-      .populate('user_id', 'username'); // Populate the user_id field with username
+      .populate('user_id', 'username');
 
     if (suggestions.length === 0) {
       res.status(200).send({ message: "Start following users to see their books." });
@@ -117,7 +104,7 @@ const booksFeed = async (req, res) => {
     }
   } catch (error) {
     console.error(error);
-    res.status(500).send("An error occurred while fetching book suggestions.");
+    res.status(500);
   }
 };
 

@@ -1,15 +1,17 @@
 const express = require("express");
+const bodyParser = require("body-parser");
+const path = require('path');
 const cors = require("cors");
-
 const app = express();
+
+app.use(bodyParser.urlencoded({ extended: true }));
+
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 const mongooseConnect = require("./configs/mongoDB.connect");
 require("dotenv").config()
 
-
 app.use(cors());
-
-
 app.use(express.json())
 
 const authMiddleware = require("./middlewares/auth.middleware");

@@ -1,7 +1,9 @@
 const mongoose = require("mongoose");
 const User = require("./users.model");
-const Genre = require("./genres.model");
 
+const genresSchema = new mongoose.Schema({
+  genre_name: String,
+});
 
 const booksSchema = new mongoose.Schema({
   title: String,
@@ -12,7 +14,7 @@ const booksSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
   },
-  genres: [Genre.schema],
+  genres: [genresSchema], 
 }, {
   timestamps: true,
 });

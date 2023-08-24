@@ -20,39 +20,32 @@ const login = async (req, res)=>{
 }
 
 const register = async (req, res) => {
-  const { password, username, first_name, last_name, email, profile_picture } = req.body;
+  const { password, username, first_name, last_name, email } = req.body;
+  const profile_picture = req.file ? req.file.filename : "";
+
   try {
-      const existingUser = await User.findOne({ $or: [{ username }, { email }] });
+    const existingUser = await User.findOne({ $or: [{ username }, { email }] });
 
-      if (existingUser) {
-          return res.status(400).send("Username or email already exists.");
-      }
-      
-      const hashedPassword = await bcrypt.hash(password, 10);
-      const user = new User({
-          username,
-          first_name,
-          last_name,
-          email,
-          profile_picture,
-          password: hashedPassword
-      });
+    if (existingUser) {
+      return res.status(400).send("Username or email already exists.");
+    }
 
-      await user.save();
-      res.status(201).send({user, message:"Account created successfully."});
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const user = new User({
+      username,
+      first_name,
+      last_name,
+      email,
+      profile_picture,
+      password: hashedPassword,
+    });
+
+    await user.save();
+    res.status(201).send({ user, message: "Account created successfully." });
   } catch (error) {
-      res.status(500).send("An error occurred while registering the user.");
+    res.status(500).send("An error occurred while registering the user.");
   }
 };
 
-const Test1 = async (req, res)=>{
-  console.log('akal')
-  res.send('akal')
-}
 
-const verify = (_, res)=>{
-  console.log('lesh')
-    res.send("Verfied")
-}
-
-module.exports = {login, register, verify, Test1}
+module.exports = {login, register}
