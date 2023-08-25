@@ -69,23 +69,14 @@ const getBookById = async (req, res) => {
 
 
 const createBook = async (req, res) => {
-  const { title, author, picture_url, review, genres} = req.body;
+  const { title, author , review} = req.body;
+  const picture_url = req.file ? req.file.filename : "";
+
   const user_id = req.user._id;
 
   try {
     const user = await User.findById(user_id);
 
-    const bookGenres = [];
-    for (const genreName of genres) {
-      const existingGenre = await Genre.findOne({ genre_name: genreName });
-      if (existingGenre) {
-        bookGenres.push(existingGenre);
-      } else {
-        const newGenre = new Genre({ genre_name: genreName });
-        await newGenre.save();
-        bookGenres.push(newGenre);
-      }
-    }
 
     const newBook = new Book({
       title,
@@ -93,7 +84,6 @@ const createBook = async (req, res) => {
       picture_url,
       review,
       user_id,
-      genres: bookGenres
     });
 
     user.books.push(newBook);

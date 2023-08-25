@@ -10,11 +10,8 @@ const getFollowedUsers = async (req, res) => {
 
     const followedUsers = currentUser.follows.map(follow => follow.following_id);
 
-    if (followedUsers.length === 0) {
-      res.status(200).send({ message: "You are not following any users." });
-    } else {
-      res.status(200).send(followedUsers);
-    }
+    res.status(200).send(followedUsers);
+    
   } catch (error) {
     console.error(error);
     res.status(500);
