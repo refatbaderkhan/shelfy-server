@@ -69,7 +69,7 @@ const getBookById = async (req, res) => {
 
 
 const createBook = async (req, res) => {
-  const { title, author , review} = req.body;
+  const { title, author , review, genres} = req.body;
   const picture_url = req.file ? req.file.filename : "";
 
   const user_id = req.user._id;
@@ -84,6 +84,7 @@ const createBook = async (req, res) => {
       picture_url,
       review,
       user_id,
+      genres: genres.map(genre => ({ genre_name: genre })),
     });
 
     user.books.push(newBook);
@@ -95,7 +96,7 @@ const createBook = async (req, res) => {
     res.status(201).send(newBook);
   } catch (error) {
     console.error(error);
-    res.status(500);
+    res.status(500).send(error.message);
   }
 };
 

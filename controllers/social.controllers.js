@@ -92,7 +92,7 @@ const booksFeed = async (req, res) => {
     const followedUserIds = user.follows.map(follow => follow.following_id._id);
     
     const suggestions = await Book.find({ user_id: { $in: followedUserIds } })
-      .populate('user_id', 'username');
+    .populate('user_id', 'username profile_picture');
 
     if (suggestions.length === 0) {
       res.status(200).send({ message: "Start following users to see their books." });
